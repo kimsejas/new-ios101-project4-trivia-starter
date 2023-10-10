@@ -18,17 +18,41 @@ class TriviaViewController: UIViewController {
   @IBOutlet weak var answerButton2: UIButton!
   @IBOutlet weak var answerButton3: UIButton!
   
-  private var questions = [TriviaQuestion]()
+    private var questions: [TriviaQuestion] = []
+    private var numOfQuestions = 2
   private var currQuestionIndex = 0
   private var numCorrectQuestions = 0
   
-  override func viewDidLoad() {
-    super.viewDidLoad()
-    addGradient()
-    questionContainerView.layer.cornerRadius = 8.0
-    // TODO: FETCH TRIVIA QUESTIONS HERE
-  }
+    override func viewDidLoad() {
+            super.viewDidLoad()
+            addGradient()
+            questionContainerView.layer.cornerRadius = 8.0
+
+            // Fetch trivia questions here
+            getRandomQuestions(numOfQuestions: numOfQuestions) { [weak self] in
+                self?.updateQuestion(withQuestionIndex: self!.currQuestionIndex)
+            }
+        }
+
+
+
+        private func setTriviaQuestions(triviaQuestion: [TriviaQuestion], completion: @escaping () -> Void) {
+            for question in triviaQuestion {
+                questions.append(question)
+            }
+            completion() // Call the completion handler to indicate that the data is ready
+        }
+
+        private func getRandomQuestions(numOfQuestions: Int, completion: @escaping () -> Void) {
+            TriviaQuestionService.fetchQuestions(numOfQuestions: numOfQuestions) { questions in
+                self.setTriviaQuestions(triviaQuestion: questions) {
+                    print(self.questions) // Now, the global questions array should contain the fetched questions
+                    completion() // Call the completion handler after questions are set
+                }
+            }
+        }
   
+    
   private func updateQuestion(withQuestionIndex questionIndex: Int) {
     currentQuestionNumberLabel.text = "Question: \(questionIndex + 1)/\(questions.count)"
     let question = questions[questionIndex]
@@ -42,14 +66,23 @@ class TriviaViewController: UIViewController {
       answerButton1.setTitle(answers[1], for: .normal)
       answerButton1.isHidden = false
     }
-    if answers.count > 2 {
-      answerButton2.setTitle(answers[2], for: .normal)
-      answerButton2.isHidden = false
-    }
-    if answers.count > 3 {
-      answerButton3.setTitle(answers[3], for: .normal)
-      answerButton3.isHidden = false
-    }
+      if answers.count == 4{
+          if answers.count > 2 {
+            answerButton2.setTitle(answers[2], for: .normal)
+            answerButton2.isHidden = false
+          }
+          if answers.count > 3 {
+            answerButton3.setTitle(answers[3], for: .normal)
+            answerButton3.isHidden = false
+          }
+          
+      }else{
+          answerButton2.isHidden = true
+          answerButton3.isHidden = true
+
+
+      }
+    
   }
   
   private func updateToNextQuestion(answer: String) {
@@ -76,6 +109,9 @@ class TriviaViewController: UIViewController {
       currQuestionIndex = 0
       numCorrectQuestions = 0
       updateQuestion(withQuestionIndex: currQuestionIndex)
+        getRandomQuestions(numOfQuestions: numOfQuestions) { [weak self] in
+            self?.updateQuestion(withQuestionIndex: self!.currQuestionIndex)
+        }
     }
     alertController.addAction(resetAction)
     present(alertController, animated: true, completion: nil)
