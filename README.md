@@ -4,7 +4,7 @@ Submitted by: **Kimberly Sejas**
 
 **Trivia** is an app that is like a quiz
 
-Time spent: **6** hours spent in total
+Time spent: **8** hours spent in total
 
 ## Required Features
 
